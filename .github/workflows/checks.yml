@@ -1,0 +1,34 @@
+name: Checks
+
+# Dedicated test + strict-clippy checks for this fork. Kept separate from the
+# feature PR so the feature can be backported upstream without these workflow
+# changes.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: cargo test
+        run: cargo test --all-features -- --show-output
+
+  clippy:
+    name: Clippy (deny warnings)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: cargo clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
