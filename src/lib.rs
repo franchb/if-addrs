@@ -1045,17 +1045,19 @@ mod tests {
                     assert_eq!(interface.is_p2p(), intf_status.is_p2p);
 
                     // When the system tool reports a MAC for this interface,
-                    // the crate should report the same one.
+                    // the crate must report the same one. Asserting `Some`
+                    // here (rather than silently skipping when `mac_addr()` is
+                    // `None`) catches a regression where the crate fails to
+                    // retrieve a MAC that the OS does expose.
                     if let Some(expected_mac) = &intf_status.mac {
-                        if let Some(mac) = interface.mac_addr() {
-                            if &mac.to_string() != expected_mac {
-                                println!(
-                                    "Interface {} MAC mismatch: listed {}, detected {}",
-                                    intf_status.name, expected_mac, mac
-                                );
-                            }
-                            assert_eq!(&mac.to_string(), expected_mac);
-                        }
+                        let mac = interface.mac_addr().unwrap_or_else(|| {
+                            panic!(
+                                "interface {} has MAC {} per the system tool, \
+                                 but the crate reported none",
+                                intf_status.name, expected_mac
+                            )
+                        });
+                        assert_eq!(&mac.to_string(), expected_mac);
                     }
                 }
             }
