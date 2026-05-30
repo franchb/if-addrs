@@ -768,12 +768,8 @@ mod tests {
         };
         thread::sleep(Duration::from_millis(1000));
         let _ = process.kill();
-        let result: Vec<u8> = process
-            .stdout
-            .unwrap()
-            .bytes()
-            .map(|x| x.unwrap())
-            .collect();
+        let mut result = Vec::new();
+        process.stdout.unwrap().read_to_end(&mut result).unwrap();
         String::from_utf8(result).unwrap()
     }
 

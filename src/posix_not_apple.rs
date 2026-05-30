@@ -69,6 +69,11 @@ impl PosixIfChangeNotifier {
         // socket.set_read_timeout(timeout)?;
         // socket.recv(&mut buf)?;
 
+        // `time_t`/`suseconds_t` differ in width across targets (e.g. `i64` on
+        // 64-bit Linux but `i32` on some 32-bit targets), so the `try_into`
+        // conversions are fallible on some platforms and infallible on others.
+        // Allow the lint where the host happens to make them infallible.
+        #[allow(clippy::unnecessary_fallible_conversions)]
         let timeout = if let Some(timeout) = timeout {
             let mut t = timeval {
                 tv_sec: timeout.as_secs().try_into().expect("timeout overflow"),
