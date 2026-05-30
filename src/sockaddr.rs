@@ -24,6 +24,54 @@ pub fn to_ipaddr(sockaddr: *const sockaddr) -> Option<IpAddr> {
     SockAddr::new(sockaddr)?.as_ipaddr()
 }
 
+/// Extract a 6-byte hardware (MAC) address from a link-layer `sockaddr`, if it
+/// is one.
+///
+/// On Linux/Android the link-layer address is carried in a `sockaddr_ll`
+/// (`AF_PACKET`); on the BSDs, Apple platforms and illumos it is carried in a
+/// `sockaddr_dl` (`AF_LINK`). Returns `None` for non-link-layer addresses or
+/// for hardware addresses that are not 6 bytes long.
+#[cfg(not(windows))]
+#[allow(unsafe_code, clippy::cast_ptr_alignment)]
+pub fn to_mac(sockaddr: *const sockaddr) -> Option<[u8; 6]> {
+    let sa = SockAddr::new(sockaddr)?;
+
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    {
+        if sa.sa_family() != libc::AF_PACKET as u32 {
+            return None;
+        }
+        let sll = unsafe { &*(sa.inner.as_ptr() as *const libc::sockaddr_ll) };
+        if sll.sll_halen != 6 {
+            return None;
+        }
+        let a = sll.sll_addr;
+        return Some([a[0], a[1], a[2], a[3], a[4], a[5]]);
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "android")))]
+    {
+        if sa.sa_family() != libc::AF_LINK as u32 {
+            return None;
+        }
+        let sdl = unsafe { &*(sa.inner.as_ptr() as *const libc::sockaddr_dl) };
+        if sdl.sdl_alen != 6 {
+            return None;
+        }
+        // The MAC bytes follow the interface name within `sdl_data`.
+        let start = sdl.sdl_nlen as usize;
+        let data = &sdl.sdl_data;
+        if start + 6 > data.len() {
+            return None;
+        }
+        let mut mac = [0u8; 6];
+        for (i, m) in mac.iter_mut().enumerate() {
+            *m = data[start + i] as u8;
+        }
+        return Some(mac);
+    }
+}
+
 // Wrapper around a sockaddr pointer. Guaranteed to not be null.
 struct SockAddr {
     inner: NonNull<sockaddr>,
