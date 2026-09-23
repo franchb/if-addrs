@@ -8,7 +8,7 @@
 // Software.
 
 #[cfg(not(windows))]
-use libc::{sockaddr, sockaddr_in, sockaddr_in6, AF_INET, AF_INET6};
+use libc::{AF_INET, AF_INET6, sockaddr, sockaddr_in, sockaddr_in6};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::ptr::NonNull;
 #[cfg(windows)]
@@ -152,7 +152,7 @@ impl SockAddr {
                 if s6_addr[0] == 0xfe && s6_addr[1] == 0x80 {
                     return None;
                 }
-                Some(IpAddr::V6(Ipv6Addr::from(s6_addr.clone())))
+                Some(IpAddr::V6(Ipv6Addr::from(s6_addr)))
             }
             None => None,
         }

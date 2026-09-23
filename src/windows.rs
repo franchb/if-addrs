@@ -7,21 +7,21 @@
 // specific language governing permissions and limitations relating to use of the SAFE Network
 // Software.
 
-use std::ffi::{c_void, CStr};
+use std::ffi::{CStr, c_void};
 
-use std::sync::mpsc::{channel, Receiver, RecvTimeoutError, Sender};
+use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender, channel};
 use std::time::Duration;
 use std::{io, ptr};
 use windows_sys::Win32::Foundation::{ERROR_BUFFER_OVERFLOW, ERROR_SUCCESS, HANDLE};
 use windows_sys::Win32::NetworkManagement::IpHelper::{
-    CancelMibChangeNotify2, GetAdaptersAddresses, NotifyIpInterfaceChange, GAA_FLAG_INCLUDE_PREFIX,
-    GAA_FLAG_SKIP_ANYCAST, GAA_FLAG_SKIP_DNS_SERVER, GAA_FLAG_SKIP_MULTICAST,
+    CancelMibChangeNotify2, GAA_FLAG_INCLUDE_PREFIX, GAA_FLAG_SKIP_ANYCAST,
+    GAA_FLAG_SKIP_DNS_SERVER, GAA_FLAG_SKIP_MULTICAST, GetAdaptersAddresses,
     IP_ADAPTER_ADDRESSES_LH, IP_ADAPTER_PREFIX_XP, IP_ADAPTER_UNICAST_ADDRESS_LH,
-    MIB_IPINTERFACE_ROW, MIB_NOTIFICATION_TYPE,
+    MIB_IPINTERFACE_ROW, MIB_NOTIFICATION_TYPE, NotifyIpInterfaceChange,
 };
 use windows_sys::Win32::Networking::WinSock::AF_UNSPEC;
 use windows_sys::Win32::System::Memory::{
-    GetProcessHeap, HeapAlloc, HeapFree, HEAP_NONE, HEAP_ZERO_MEMORY,
+    GetProcessHeap, HEAP_NONE, HEAP_ZERO_MEMORY, HeapAlloc, HeapFree,
 };
 
 use crate::IfOperStatus;
@@ -48,20 +48,12 @@ impl IpAdapterAddresses {
 
     pub fn ipv4_index(&self) -> Option<u32> {
         let if_index = unsafe { (*self.0).Anonymous1.Anonymous.IfIndex };
-        if if_index == 0 {
-            None
-        } else {
-            Some(if_index)
-        }
+        if if_index == 0 { None } else { Some(if_index) }
     }
 
     pub fn ipv6_index(&self) -> Option<u32> {
         let if_index = unsafe { (*self.0).Ipv6IfIndex };
-        if if_index == 0 {
-            None
-        } else {
-            Some(if_index)
-        }
+        if if_index == 0 { None } else { Some(if_index) }
     }
 
     pub fn prefixes(&self) -> PrefixesIterator<'_> {
@@ -312,10 +304,12 @@ unsafe extern "system" fn if_change_callback(
     _row: *const MIB_IPINTERFACE_ROW,
     _notificationtype: MIB_NOTIFICATION_TYPE,
 ) {
-    if let Some(tx) = (ctx as *const Sender<()>).as_ref() {
-        tx.send(()).ok();
-    };
+    unsafe {
+        if let Some(tx) = (ctx as *const Sender<()>).as_ref() {
+            tx.send(()).ok();
+        };
 
-    // note: `row` not used, as for all changes that we care for (interface
-    // add/remove), all the member values are 0, so it's useless.
+        // note: `row` not used, as for all changes that we care for (interface
+        // add/remove), all the member values are 0, so it's useless.
+    }
 }

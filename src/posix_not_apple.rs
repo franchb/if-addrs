@@ -3,8 +3,8 @@ use std::mem;
 use std::time::Duration;
 
 use libc::{
-    bind, c_int, c_void, close, recv, setsockopt, sockaddr_nl, socket, socklen_t, ssize_t, timeval,
-    AF_NETLINK, NETLINK_ROUTE, SOCK_RAW, SOL_SOCKET, SO_RCVTIMEO,
+    AF_NETLINK, NETLINK_ROUTE, SO_RCVTIMEO, SOCK_RAW, SOL_SOCKET, bind, c_int, c_void, close, recv,
+    setsockopt, sockaddr_nl, socket, socklen_t, ssize_t, timeval,
 };
 
 #[repr(transparent)]
