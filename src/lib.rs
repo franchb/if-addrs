@@ -968,10 +968,10 @@ mod tests {
                 }
             } else if let Some(rest) = line.trim().strip_prefix("ether ") {
                 // e.g. "ether c6:0e:5e:f8:5d:f4"
-                if let Some(mac) = rest.split_whitespace().next() {
-                    if let Some(current_intf) = intf_status_vec.last_mut() {
-                        current_intf.mac = Some(mac.to_lowercase());
-                    }
+                if let Some(mac) = rest.split_whitespace().next()
+                    && let Some(current_intf) = intf_status_vec.last_mut()
+                {
+                    current_intf.mac = Some(mac.to_lowercase());
                 }
             }
         }
