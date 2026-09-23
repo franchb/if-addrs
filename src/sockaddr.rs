@@ -152,7 +152,7 @@ impl SockAddr {
                 if s6_addr[0] == 0xfe && s6_addr[1] == 0x80 {
                     return None;
                 }
-                Some(IpAddr::V6(Ipv6Addr::from(s6_addr.clone())))
+                Some(IpAddr::V6(Ipv6Addr::from(s6_addr)))
             }
             None => None,
         }

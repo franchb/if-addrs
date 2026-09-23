@@ -480,7 +480,7 @@ mod getifaddrs_windows {
                                     for (n, netmask_elt) in netmask
                                         .iter_mut()
                                         .enumerate()
-                                        .take((prefix.PrefixLength as usize + 7) / 8)
+                                        .take((prefix.PrefixLength as usize).div_ceil(8))
                                     {
                                         let x_byte = ipv4_addr.octets()[n];
                                         let y_byte = a.octets()[n];
@@ -535,7 +535,7 @@ mod getifaddrs_windows {
                                     for (n, netmask_elt) in netmask
                                         .iter_mut()
                                         .enumerate()
-                                        .take((prefix.PrefixLength as usize + 15) / 16)
+                                        .take((prefix.PrefixLength as usize).div_ceil(16))
                                     {
                                         let x_word = ipv6_addr.segments()[n];
                                         let y_word = a.segments()[n];
@@ -900,11 +900,10 @@ mod tests {
                 });
             } else if let Some(rest) = line.trim().strip_prefix("link/ether ") {
                 // e.g. "link/ether 02:fc:00:00:00:01 brd ff:ff:ff:ff:ff:ff"
-                if let Some(mac) = rest.split_whitespace().next() {
-                    if let Some(current) = intf_status_vec.last_mut() {
+                if let Some(mac) = rest.split_whitespace().next()
+                    && let Some(current) = intf_status_vec.last_mut() {
                         current.mac = Some(mac.to_lowercase());
                     }
-                }
             }
         }
 
