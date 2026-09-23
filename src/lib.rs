@@ -303,9 +303,9 @@ mod getifaddrs_posix {
     use libc::if_nametoindex;
 
     use super::{IfAddr, Ifv4Addr, Ifv6Addr, Interface, MacAddr};
+    use crate::IfOperStatus;
     use crate::posix::{self as ifaddrs, IfAddrs};
     use crate::sockaddr;
-    use crate::IfOperStatus;
     use std::collections::HashMap;
     use std::ffi::CStr;
     use std::io;
@@ -408,11 +408,7 @@ mod getifaddrs_posix {
                 // From `man if_nametoindex 3`:
                 // The if_nametoindex() function maps the interface name specified in ifname to its
                 // corresponding index. If the specified interface does not exist, it returns 0.
-                if index == 0 {
-                    None
-                } else {
-                    Some(index)
-                }
+                if index == 0 { None } else { Some(index) }
             };
 
             let oper_status = if ifaddr.ifa_flags & POSIX_IFF_RUNNING != 0 {
@@ -735,7 +731,7 @@ pub use if_change_notifier::{IfChangeNotifier, IfChangeType};
 
 #[cfg(test)]
 mod tests {
-    use super::{get_if_addrs, Interface};
+    use super::{Interface, get_if_addrs};
     use std::io::Read;
     use std::net::{IpAddr, Ipv4Addr};
     use std::process::{Command, Stdio};
@@ -901,9 +897,10 @@ mod tests {
             } else if let Some(rest) = line.trim().strip_prefix("link/ether ") {
                 // e.g. "link/ether 02:fc:00:00:00:01 brd ff:ff:ff:ff:ff:ff"
                 if let Some(mac) = rest.split_whitespace().next()
-                    && let Some(current) = intf_status_vec.last_mut() {
-                        current.mac = Some(mac.to_lowercase());
-                    }
+                    && let Some(current) = intf_status_vec.last_mut()
+                {
+                    current.mac = Some(mac.to_lowercase());
+                }
             }
         }
 
