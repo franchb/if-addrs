@@ -311,11 +311,11 @@ unsafe extern "system" fn if_change_callback(
     ctx: *const c_void,
     _row: *const MIB_IPINTERFACE_ROW,
     _notificationtype: MIB_NOTIFICATION_TYPE,
-) {
+) { unsafe {
     if let Some(tx) = (ctx as *const Sender<()>).as_ref() {
         tx.send(()).ok();
     };
 
     // note: `row` not used, as for all changes that we care for (interface
     // add/remove), all the member values are 0, so it's useless.
-}
+}}
